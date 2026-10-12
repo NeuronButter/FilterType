@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FilterType.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DnsServerCore.ApplicationCommon" HintPath="..\lib\DnsServerCore.ApplicationCommon.dll" />
+    <Reference Include="TechnitiumLibrary" HintPath="..\lib\TechnitiumLibrary.dll" />
+    <Reference Include="TechnitiumLibrary.Net" HintPath="..\lib\TechnitiumLibrary.Net.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

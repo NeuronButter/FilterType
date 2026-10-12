@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: Test and Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Fetch Reference Assemblies
+        run: mise run fetch-tags
+
+      - name: Run Unit Tests
+        run: mise run test
+
+      - name: Build Project
+        run: mise run build
+
+      - name: Package Release
+        run: mise run package
+
+      - name: Upload Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FilterTypeApp
+          path: artifacts/FilterTypeApp.zip
+          if-no-files-found: error

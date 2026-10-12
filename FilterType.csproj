@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>FilterTypeApp</AssemblyName>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tests\**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="DnsServerCore.ApplicationCommon" HintPath="lib\DnsServerCore.ApplicationCommon.dll" Private="false" />
+		<Reference Include="TechnitiumLibrary" HintPath="lib\TechnitiumLibrary.dll" Private="false" />
+		<Reference Include="TechnitiumLibrary.Net" HintPath="lib\TechnitiumLibrary.Net.dll" Private="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="dnsApp.config" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="README.md" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>

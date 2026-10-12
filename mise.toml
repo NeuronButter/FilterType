@@ -1,0 +1,26 @@
+[tools]
+nu = "latest"
+
+[tasks.fetch-tags]
+description = "Fetch latest upstream Technitium release assemblies into lib/"
+run = "nu scripts/fetch-tags.nu"
+
+[tasks.test]
+description = "Run unit tests"
+run = "dotnet test tests/FilterType.Tests.csproj -c Release"
+
+[tasks.build]
+description = "Build and publish project binaries"
+run = "dotnet publish FilterType.csproj -c Release -o bin/Release/publish"
+
+[tasks.package]
+description = "Package published binaries into FilterTypeApp.zip"
+run = "nu scripts/package.nu"
+
+[tasks.all]
+description = "Run test, build, and package"
+run = [
+  { task = "build" },
+  { task = "test" },
+  { task = "package" },
+]
