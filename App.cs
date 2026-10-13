@@ -53,6 +53,7 @@ namespace FilterType
             JsonElement root = jsonDocument.RootElement;
 
             List<FilterRule> rules = new List<FilterRule>();
+            bool defaultRequireARecord = true;
 
             if (root.ValueKind == JsonValueKind.Array)
             {
@@ -65,7 +66,7 @@ namespace FilterType
 
                 foreach (JsonElement element in root.EnumerateArray())
                 {
-                    ParseRule(element, rules);
+                    ParseRule(element, rules, defaultRequireARecord);
                 }
             }
             else if (root.ValueKind == JsonValueKind.Object)
@@ -76,6 +77,7 @@ namespace FilterType
                 //   "filterRules": [ ... ]
                 // }
                 _defaultTtl = root.GetPropertyValue("defaultTtl", 30u);
+                defaultRequireARecord = root.GetPropertyValue("requireARecord", true);
 
                 // Attempt to read rules from standard property names: filterRules, filters, blocked, rules, zones
                 JsonElement arrayElement = default;
@@ -96,7 +98,7 @@ namespace FilterType
                 {
                     foreach (JsonElement element in arrayElement.EnumerateArray())
                     {
-                        ParseRule(element, rules);
+                        ParseRule(element, rules, defaultRequireARecord);
                     }
                 }
             }
@@ -273,7 +275,7 @@ namespace FilterType
 
         #region private
 
-        private static void ParseRule(JsonElement element, List<FilterRule> rules)
+        private static void ParseRule(JsonElement element, List<FilterRule> rules, bool defaultRequireARecord = true)
         {
             if (element.ValueKind != JsonValueKind.Object)
                 return;
@@ -287,7 +289,7 @@ namespace FilterType
                 name = jsonDomain.GetString() ?? string.Empty;
 
             bool blockSubDomains = element.GetPropertyValue("blockSubDomains", true);
-            bool requireARecord = element.GetPropertyValue("requireARecord", false);
+            bool requireARecord = element.GetPropertyValue("requireARecord", defaultRequireARecord);
 
             List<DnsResourceRecordType> types = new List<DnsResourceRecordType>();
 
@@ -363,7 +365,7 @@ namespace FilterType
         public bool BlockSubDomains { get; }
         public bool RequireARecord { get; }
 
-        public FilterRule(string name, DnsResourceRecordType type, bool blockSubDomains = true, bool requireARecord = false)
+        public FilterRule(string name, DnsResourceRecordType type, bool blockSubDomains = true, bool requireARecord = true)
         {
             Name = (name ?? string.Empty).Trim().TrimEnd('.');
             Type = type;

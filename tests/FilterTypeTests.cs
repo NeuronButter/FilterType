@@ -38,6 +38,12 @@ namespace FilterType.Tests
                 if (DirectQueryHandler is not null)
                     return Task.FromResult(DirectQueryHandler(question));
 
+                if (question.Type == DnsResourceRecordType.A)
+                {
+                    DnsResourceRecord a = new DnsResourceRecord(question.Name, DnsResourceRecordType.A, DnsClass.IN, 300, new DnsARecordData(IPAddress.Parse("1.2.3.4")));
+                    return Task.FromResult(new DnsDatagram(1, true, DnsOpcode.StandardQuery, false, false, true, true, false, false, DnsResponseCode.NoError, [question], [a]));
+                }
+
                 return Task.FromResult(new DnsDatagram(1, true, DnsOpcode.StandardQuery, false, false, true, true, false, false, DnsResponseCode.NxDomain, [question]));
             }
 
@@ -127,12 +133,12 @@ namespace FilterType.Tests
             Assert.Equal("example.com", app.FilterRules[0].Name);
             Assert.Equal(DnsResourceRecordType.HTTPS, app.FilterRules[0].Type);
             Assert.True(app.FilterRules[0].BlockSubDomains);
-            Assert.False(app.FilterRules[0].RequireARecord);
+            Assert.True(app.FilterRules[0].RequireARecord);
 
             Assert.Equal("example.com", app.FilterRules[1].Name);
             Assert.Equal(DnsResourceRecordType.AAAA, app.FilterRules[1].Type);
             Assert.True(app.FilterRules[1].BlockSubDomains);
-            Assert.False(app.FilterRules[1].RequireARecord);
+            Assert.True(app.FilterRules[1].RequireARecord);
         }
 
         [Fact]
@@ -165,6 +171,53 @@ namespace FilterType.Tests
             Assert.Equal("blocked.com", app.FilterRules[1].Name);
             Assert.Equal(DnsResourceRecordType.AAAA, app.FilterRules[1].Type);
             Assert.False(app.FilterRules[1].BlockSubDomains);
+            Assert.True(app.FilterRules[1].RequireARecord);
+        }
+
+        [Fact]
+        public async Task ConfigParsing_ObjectWrapper_DefaultsRequireARecordToTrue()
+        {
+            string config = @"{
+  ""filters"": [
+    {
+      ""name"": ""blocked.com"",
+      ""type"": ""HTTPS""
+    }
+  ]
+}";
+            MockDnsServer server = new MockDnsServer();
+            App app = new App();
+
+            await app.InitializeAsync(server, config);
+
+            Assert.Single(app.FilterRules);
+            Assert.True(app.FilterRules[0].RequireARecord);
+        }
+
+        [Fact]
+        public async Task ConfigParsing_ObjectWrapper_GlobalRequireARecordOverride()
+        {
+            string config = @"{
+  ""requireARecord"": false,
+  ""filters"": [
+    {
+      ""name"": ""domain1.com"",
+      ""type"": ""HTTPS""
+    },
+    {
+      ""name"": ""domain2.com"",
+      ""type"": ""AAAA"",
+      ""requireARecord"": true
+    }
+  ]
+}";
+            MockDnsServer server = new MockDnsServer();
+            App app = new App();
+
+            await app.InitializeAsync(server, config);
+
+            Assert.Equal(2, app.FilterRules.Count);
+            Assert.False(app.FilterRules[0].RequireARecord);
             Assert.True(app.FilterRules[1].RequireARecord);
         }
 
@@ -419,6 +472,36 @@ namespace FilterType.Tests
             Assert.Empty(result2.Answer);
             Assert.Single(result2.Authority);
             Assert.Equal(DnsResourceRecordType.SOA, result2.Authority[0].Type);
+        }
+
+        [Fact]
+        public async Task PostProcess_RequireARecordFalse_FiltersEvenWhenNoAExists()
+        {
+            string config = @"[ { ""name"": ""example.com"", ""type"": ""AAAA"", ""requireARecord"": false } ]";
+            MockDnsServer server = new MockDnsServer();
+            App app = new App();
+            await app.InitializeAsync(server, config);
+
+            // Even when direct query for A returns no records / NxDomain, requireARecord: false means filter anyway
+            server.DirectQueryHandler = (q) =>
+            {
+                return new DnsDatagram(1, true, DnsOpcode.StandardQuery, false, false, true, true, false, false, DnsResponseCode.NxDomain, [q]);
+            };
+
+            DnsDatagram request = CreateRequest("example.com", DnsResourceRecordType.AAAA);
+            DnsResourceRecord aaaaRecord = new DnsResourceRecord(
+                "example.com",
+                DnsResourceRecordType.AAAA,
+                DnsClass.IN,
+                300,
+                new DnsAAAARecordData(IPAddress.Parse("2606:4700:4700::1111")));
+            DnsDatagram upstreamResponse = CreateResponse(request, [aaaaRecord]);
+
+            DnsDatagram? result = await app.PostProcessAsync(request, DefaultClientEP, DnsTransportProtocol.Udp, upstreamResponse);
+            Assert.NotNull(result);
+            Assert.Empty(result.Answer);
+            Assert.Single(result.Authority);
+            Assert.Equal(DnsResourceRecordType.SOA, result.Authority[0].Type);
         }
     }
 }

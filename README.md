@@ -106,10 +106,11 @@ For more control, you can wrap the rules in a configuration object with options 
 
 #### Global Options (Object Format)
 
-| Property     | Type    | Default | Description                                                                  |
-| ------------ | ------- | ------- | ---------------------------------------------------------------------------- |
-| `defaultTtl` | integer | `30`    | TTL in seconds for the `SOA` record returned in NODATA responses.            |
-| `filters`    | array   | `[]`    | Array of filter rule objects. (Also accepts `blocked`, `rules`, or `zones`). |
+| Property         | Type    | Default | Description                                                                  |
+| ---------------- | ------- | ------- | ---------------------------------------------------------------------------- |
+| `defaultTtl`     | integer | `30`    | TTL in seconds for the `SOA` record returned in NODATA responses.            |
+| `requireARecord` | boolean | `true`  | Default `requireARecord` setting for all filter rules.                       |
+| `filters`        | array   | `[]`    | Array of filter rule objects. (Also accepts `blocked`, `rules`, or `zones`). |
 
 #### Filter Rule Properties
 
@@ -119,7 +120,7 @@ For more control, you can wrap the rules in a configuration object with options 
 | `type`             | string / int | -       | The record type to filter (e.g. `"HTTPS"`, `"AAAA"`, `65`, `28`, `"ANY"`). Case-insensitive.                       |
 | `types`            | array        | -       | Optional list of record types to filter for this zone (e.g. `["HTTPS", "AAAA"]`).                                  |
 | `blockSubDomains`  | boolean      | `true`  | When `true`, matches the domain and all its subdomains (`*.example.com`). When `false`, only exact domain matches. |
-| `requireARecord`   | boolean      | `false` | When `true`, only filters the record if an `A` record also exists for the domain (like `FilterAaaa`).              |
+| `requireARecord`   | boolean      | `true`  | When `true`, only filters the record if an `A` record also exists for the domain (like `FilterAaaa`).              |
 
 ---
 
