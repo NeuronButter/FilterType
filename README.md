@@ -202,7 +202,7 @@ dotnet test tests/FilterType.Tests.csproj -c Release
 This repository includes automated GitHub Actions workflows:
 
 - **`.github/workflows/ci.yml`**: Triggers on pull requests and pushes to `main`/`master`. Fetches the latest upstream Technitium release, runs the test suite, and packages `FilterTypeApp.zip`.
-- **`.github/workflows/release.yml`**: Triggers on tag push (`v*`) or manual workflow dispatch. Compiles and tests against the latest upstream Technitium release, packages `FilterTypeApp.zip`, and creates a GitHub Release with the package attached.
+- **`.github/workflows/release.yml`**: Triggers on manual workflow dispatch (`workflow_dispatch`) with a required release version. Compiles and tests against the latest upstream Technitium release, packages `FilterTypeApp.zip` with the specified version, and creates a GitHub Release with the package attached.
 
 ---
 

@@ -14,13 +14,5 @@ description = "Build and publish project binaries"
 run = "dotnet publish FilterType.csproj -c Release -o bin/Release/publish"
 
 [tasks.package]
-description = "Package published binaries into FilterTypeApp.zip"
+description = "Build and package FilterType into FilterTypeApp.zip with dynamic version"
 run = "nu scripts/package.nu"
-
-[tasks.all]
-description = "Run test, build, and package"
-run = [
-  { task = "build" },
-  { task = "test" },
-  { task = "package" },
-]
