@@ -2,17 +2,27 @@
 # Fetches the latest upstream Technitium release tag and builds reference assemblies in lib/
 
 def get-latest-upstream-tag [] {
-    try {
-        let tag_line = (git ls-remote --tags --sort=-v:refname "https://github.com/TechnitiumSoftware/DnsServer.git"
-            | lines
-            | where { not ($in =~ "\^{}") }
-            | first)
-        let tag = ($tag_line | parse --regex "refs/tags/(?P<tag>v\\d+\\.\\d+\\.\\d+)" | get tag.0)
-        return $tag
-    } catch {
-        # Fallback to latest known release if offline/sandboxed
-        return "v15.6.1"
+    let result = (do { git ls-remote --tags --sort=-v:refname "https://github.com/TechnitiumSoftware/DnsServer.git" } | complete)
+    if $result.exit_code != 0 {
+        error make { msg: $"Failed to fetch upstream release tags from GitHub (check internet connection): ($result.stderr | str trim)" }
     }
+
+    let matching_lines = ($result.stdout
+        | lines
+        | where { not ($in =~ '\^{}') }
+        | where { $in =~ 'refs/tags/v\d+\.\d+\.\d+' })
+
+    if ($matching_lines | is-empty) {
+        error make { msg: "No valid release tags found in upstream Technitium repository." }
+    }
+
+    let tag_line = ($matching_lines | first)
+    let parsed = ($tag_line | parse --regex "refs/tags/(?P<tag>v\\d+\\.\\d+\\.\\d+)")
+    if ($parsed | is-empty) {
+        error make { msg: $"Failed to parse upstream tag from line: '($tag_line)'" }
+    }
+
+    $parsed | get tag.0
 }
 
 def main [
